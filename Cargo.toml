@@ -1,0 +1,7 @@
+[package]
+name = "aoc2019"
+version = "0.1.0"
+authors = ["Srujun Thanmay Gupta <srujun@srujun.com>"]
+edition = "2018"
+
+[dependencies]
