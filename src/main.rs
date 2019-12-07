@@ -2,6 +2,7 @@ use std::env;
 use std::fs;
 
 use aoc2019::day01::DayOne;
+use aoc2019::day02::DayTwo;
 use aoc2019::problem::Problem;
 
 fn main() -> Result<(), String> {
@@ -58,6 +59,7 @@ fn result(expected: &str, actual: &str) -> String {
 fn get_problem(day: usize) -> Option<Box<dyn Problem>> {
   match day {
     1 => Some(Box::new(DayOne {})),
+    2 => Some(Box::new(DayTwo {})),
     _ => None,
   }
 }
