@@ -4,6 +4,7 @@ use std::fs;
 use aoc2019::day01::DayOne;
 use aoc2019::day02::DayTwo;
 use aoc2019::day03::DayThree;
+use aoc2019::day04::DayFour;
 use aoc2019::problem::Problem;
 
 fn main() -> Result<(), String> {
@@ -62,6 +63,7 @@ fn get_problem(day: usize) -> Option<Box<dyn Problem>> {
     1 => Some(Box::new(DayOne {})),
     2 => Some(Box::new(DayTwo {})),
     3 => Some(Box::new(DayThree {})),
+    4 => Some(Box::new(DayFour {})),
     _ => None,
   }
 }
