@@ -21,7 +21,7 @@ impl Coord {
     Coord { x, y }
   }
 
-  fn manhattan(&self) -> u32 {
+  fn manhattan(self) -> u32 {
     self.x.abs() as u32 + self.y.abs() as u32
   }
 }
