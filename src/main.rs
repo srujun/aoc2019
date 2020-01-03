@@ -1,6 +1,8 @@
 use std::env;
 use std::fs;
 
+use colored::*;
+
 use aoc2019::day01::DayOne;
 use aoc2019::day02::DayTwo;
 use aoc2019::day03::DayThree;
@@ -16,7 +18,7 @@ fn main() -> Result<(), String> {
     }
     None => {
       for day in 1..25 {
-        if let Err(_) = print_problem(day) {
+        if print_problem(day).is_err() {
           break;
         }
         println!();
@@ -33,28 +35,28 @@ fn print_problem(day: usize) -> Result<(), String> {
   let problem = get_problem(day).ok_or_else(|| format!("Day {} not implemented!", day_str))?;
   let input = fs::read_to_string(format!("inputs/day{}.txt", day_str)).unwrap();
 
-  println!("Day {}", day_str);
+  println!("{}", format!("DAY {}", day_str).blue().bold());
 
   // Part 1
   let expected = problem.soln_one();
   let actual = problem.part_one(&input);
-  println!("Part 1: (expected answer: {})", expected);
-  println!("Actual: {} {}", actual, result(&expected, &actual));
+  println!("Part 1: (expected answer: {})", expected.bold());
+  println!("Actual: {} {}", actual.bold(), result(&expected, &actual));
 
   // Part 2
   let expected = problem.soln_two();
   let actual = problem.part_two(&input);
-  println!("Part 2: (expected answer: {})", expected);
-  println!("Actual: {} {}", actual, result(&expected, &actual));
+  println!("Part 2: (expected answer: {})", expected.bold());
+  println!("Actual: {} {}", actual.bold(), result(&expected, &actual));
 
   Ok(())
 }
 
 fn result(expected: &str, actual: &str) -> String {
   if expected == actual {
-    "✓".to_string()
+    "✓".green().to_string()
   } else {
-    "✗".to_string()
+    "✗".red().to_string()
   }
 }
 

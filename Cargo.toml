@@ -5,3 +5,4 @@ authors = ["Srujun Thanmay Gupta <srujun@srujun.com>"]
 edition = "2018"
 
 [dependencies]
+colored = "1.9.1"
