@@ -62,10 +62,10 @@ fn result(expected: &str, actual: &str) -> String {
 
 fn get_problem(day: usize) -> Option<Box<dyn Problem>> {
   match day {
-    1 => Some(Box::new(DayOne {})),
-    2 => Some(Box::new(DayTwo {})),
-    3 => Some(Box::new(DayThree {})),
-    4 => Some(Box::new(DayFour {})),
+    1 => Some(Box::new(DayOne::new())),
+    2 => Some(Box::new(DayTwo::new())),
+    3 => Some(Box::new(DayThree::new())),
+    4 => Some(Box::new(DayFour::new())),
     _ => None,
   }
 }

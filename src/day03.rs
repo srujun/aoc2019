@@ -21,7 +21,7 @@ impl Coord {
     Coord { x, y }
   }
 
-  fn manhattan(&self) -> u32 {
+  fn manhattan(self) -> u32 {
     self.x.abs() as u32 + self.y.abs() as u32
   }
 }
@@ -88,9 +88,14 @@ struct Intersection {
   point: Coord,
 }
 
+#[derive(Default)]
 pub struct DayThree {}
 
 impl DayThree {
+  pub fn new() -> Self {
+    Self {}
+  }
+
   fn build_maps(horizontals: &mut WireMap, verticals: &mut WireMap, wire: &[Movement]) {
     let mut curr_pos = Coord::new();
     let mut steps: u32 = 0;

@@ -1,8 +1,13 @@
 use crate::problem::Problem;
 
+#[derive(Default)]
 pub struct DayFour {}
 
 impl DayFour {
+  pub fn new() -> Self {
+    Self {}
+  }
+
   fn check_part_one(num: u32) -> bool {
     Self::non_decreasing(num) && Self::adjacent_same(num)
   }

@@ -1,8 +1,13 @@
 use crate::problem::Problem;
 
+#[derive(Default)]
 pub struct DayTwo {}
 
 impl DayTwo {
+  pub fn new() -> Self {
+    Self {}
+  }
+
   fn solve(&self, program: &mut Vec<u32>) {
     let mut ipr = 0;
     let mut iters = 0;

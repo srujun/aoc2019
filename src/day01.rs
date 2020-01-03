@@ -1,8 +1,13 @@
 use crate::problem::Problem;
 
+#[derive(Default)]
 pub struct DayOne {}
 
 impl DayOne {
+  pub fn new() -> Self {
+    Self {}
+  }
+
   fn calc_fuel(mass: u32) -> i32 {
     (mass as f32 / 3.).floor() as i32 - 2
   }
