@@ -15,6 +15,16 @@ enum Parameter {
   Immediate(i64),
 }
 
+impl Parameter {
+  fn create(mode: u8, value: i64) -> Parameter {
+    match mode {
+      0 => Parameter::Position(value as u64),
+      1 => Parameter::Immediate(value),
+      _ => panic!("Found unknown parameter mode {} with value {}", mode, value),
+    }
+  }
+}
+
 impl fmt::Display for Parameter {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     match self {
@@ -79,6 +89,60 @@ impl Intcode {
     }
   }
 
+  fn get_param(&self, opcode: u64, number: usize) -> Parameter {
+    Parameter::create(get_mode(opcode, number), self.program[self.ipr + number])
+  }
+
+  fn get_instruction(&self) -> Instruction {
+    let opcode = self.program[self.ipr] as u64;
+    match opcode % 100 {
+      1 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        let param_3 = self.get_param(opcode, 3);
+        Instruction::Add(param_1, param_2, param_3)
+      }
+      2 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        let param_3 = self.get_param(opcode, 3);
+        Instruction::Multiply(param_1, param_2, param_3)
+      }
+      3 => {
+        let param_1 = self.get_param(opcode, 1);
+        Instruction::Input(param_1)
+      }
+      4 => {
+        let param_1 = self.get_param(opcode, 1);
+        Instruction::Output(param_1)
+      }
+      5 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        Instruction::JumpIfTrue(param_1, param_2)
+      }
+      6 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        Instruction::JumpIfFalse(param_1, param_2)
+      }
+      7 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        let param_3 = self.get_param(opcode, 3);
+        Instruction::LessThan(param_1, param_2, param_3)
+      }
+      8 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        let param_3 = self.get_param(opcode, 3);
+        Instruction::Equal(param_1, param_2, param_3)
+      }
+      99 => Instruction::Halt,
+      _ => panic!("Found unknown opcode {}", opcode),
+    }
+  }
+
   pub fn run(&mut self) {
     if self.has_halted {
       panic!("Program has already halted!");
@@ -90,7 +154,7 @@ impl Intcode {
         panic!("Ran too many times!");
       }
 
-      let instruction = get_instruction(&self.program[self.ipr..]);
+      let instruction = self.get_instruction();
       if self.debug {
         println!("{}", instruction);
       }
@@ -230,68 +294,10 @@ fn get_value(parameter: Parameter, program: &[i64]) -> i64 {
   }
 }
 
-fn get_instruction(program: &[i64]) -> Instruction {
-  let opcode = program[0] as u64;
-  match opcode % 100 {
-    1 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      let param_3 = get_param(get_mode(opcode, 3), program[3]);
-      Instruction::Add(param_1, param_2, param_3)
-    }
-    2 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      let param_3 = get_param(get_mode(opcode, 3), program[3]);
-      Instruction::Multiply(param_1, param_2, param_3)
-    }
-    3 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      Instruction::Input(param_1)
-    }
-    4 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      Instruction::Output(param_1)
-    }
-    5 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      Instruction::JumpIfTrue(param_1, param_2)
-    }
-    6 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      Instruction::JumpIfFalse(param_1, param_2)
-    }
-    7 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      let param_3 = get_param(get_mode(opcode, 3), program[3]);
-      Instruction::LessThan(param_1, param_2, param_3)
-    }
-    8 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      let param_3 = get_param(get_mode(opcode, 3), program[3]);
-      Instruction::Equal(param_1, param_2, param_3)
-    }
-    99 => Instruction::Halt,
-    _ => panic!("Found unknown opcode {}", opcode),
-  }
-}
-
 fn get_mode(opcode: u64, param_number: usize) -> u8 {
   assert!(param_number > 0, "param_number should be > 0");
   let divider = 10 * (10u64.pow(param_number as u32));
   ((opcode / divider) % 10).try_into().unwrap()
-}
-
-fn get_param(mode: u8, value: i64) -> Parameter {
-  match mode {
-    0 => Parameter::Position(value as u64),
-    1 => Parameter::Immediate(value),
-    _ => panic!("Found unknown parameter mode {} with value {}", mode, value),
-  }
 }
 
 #[cfg(test)]
