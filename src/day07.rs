@@ -13,11 +13,11 @@ impl DaySeven {
     Self {}
   }
 
-  fn get_output_part_one(phase_settings: &[u8], amp_program: &[i32]) -> i32 {
+  fn get_output_part_one(phase_settings: &[u8], amp_program: &[i64]) -> i64 {
     let mut signal = 0;
     for &phase in phase_settings.iter() {
       let mut intcode = Intcode::new(amp_program.to_vec());
-      intcode.inputs = vec![phase as i32, signal];
+      intcode.inputs = vec![phase as i64, signal];
       intcode.run();
       signal = intcode.outputs[0];
     }
@@ -25,7 +25,7 @@ impl DaySeven {
     signal
   }
 
-  fn get_output_part_two(phase_settings: &[u8], amp_program: &[i32]) -> i32 {
+  fn get_output_part_two(phase_settings: &[u8], amp_program: &[i64]) -> i64 {
     // can probably be optimized...
     let mut amps: [Intcode; NUM_AMPS] = [
       Intcode::new(amp_program.to_vec()),
@@ -36,7 +36,7 @@ impl DaySeven {
     ];
     // provide the initial phase signal to each amp
     for (i, amp) in amps.iter_mut().enumerate() {
-      amp.inputs.push(phase_settings[i] as i32);
+      amp.inputs.push(phase_settings[i] as i64);
     }
     // provide 0 input signal to first amp
     amps[0].inputs.push(0);
@@ -44,7 +44,7 @@ impl DaySeven {
     // cycle through each amp in order
     let mut amp_iter = (0..NUM_AMPS).cycle().peekable();
     loop {
-      let signal: i32;
+      let signal: i64;
       // separate blocks to not mutably borrow amps more than
       // once at the same time
       {
@@ -79,15 +79,15 @@ impl Problem for DaySeven {
   // 1st input: phase setting
   // 2nd input: amp's input signal (prev amp's output)
   fn part_one(&self, program: &str) -> Option<String> {
-    let amp_program: Vec<i32> = intcode::parse_program(program);
+    let amp_program: Vec<i64> = intcode::parse_program(program);
 
     let phase_permutations = SERIES_PHASES.permutations(NUM_AMPS);
-    let all_outputs: Vec<i32> = phase_permutations
+    let all_outputs: Vec<i64> = phase_permutations
       .map(|setting| Self::get_output_part_one(&setting, &amp_program))
       .collect();
 
     // find the largest output
-    Some(all_outputs.iter().max().map(i32::to_string).unwrap())
+    Some(all_outputs.iter().max().map(i64::to_string).unwrap())
   }
 
   fn soln_two(&self) -> Option<String> {
@@ -95,15 +95,15 @@ impl Problem for DaySeven {
   }
 
   fn part_two(&self, program: &str) -> Option<String> {
-    let amp_program: Vec<i32> = intcode::parse_program(program);
+    let amp_program: Vec<i64> = intcode::parse_program(program);
 
     let phase_permutations = LOOP_PHASES.permutations(NUM_AMPS);
-    let all_outputs: Vec<i32> = phase_permutations
+    let all_outputs: Vec<i64> = phase_permutations
       .map(|setting| Self::get_output_part_two(&setting, &amp_program))
       .collect();
 
     // find the largest output
-    Some(all_outputs.iter().max().map(i32::to_string).unwrap())
+    Some(all_outputs.iter().max().map(i64::to_string).unwrap())
   }
 }
 

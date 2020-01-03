@@ -1,18 +1,18 @@
 use std::convert::TryInto;
 use std::fmt;
 
-pub fn parse_program(program: &str) -> Vec<i32> {
+pub fn parse_program(program: &str) -> Vec<i64> {
   program
     .split(',')
-    .map(|x| x.parse::<i32>())
+    .map(|x| x.parse::<i64>())
     .filter_map(Result::ok)
     .collect()
 }
 
 #[derive(Clone, Copy, PartialEq)]
 enum Parameter {
-  Position(u32),
-  Immediate(i32),
+  Position(u64),
+  Immediate(i64),
 }
 
 impl fmt::Display for Parameter {
@@ -53,11 +53,11 @@ impl fmt::Display for Instruction {
 }
 
 pub struct Intcode {
-  pub program: Vec<i32>,
+  pub program: Vec<i64>,
   pub debug: bool,
-  pub inputs: Vec<i32>,
+  pub inputs: Vec<i64>,
   next_input: usize,
-  pub outputs: Vec<i32>,
+  pub outputs: Vec<i64>,
   ipr: usize,
   iters: u32,
   pub has_halted: bool,
@@ -66,7 +66,7 @@ pub struct Intcode {
 const MAX_ITERS: u32 = 1_000_000;
 
 impl Intcode {
-  pub fn new(program: Vec<i32>) -> Self {
+  pub fn new(program: Vec<i64>) -> Self {
     Intcode {
       program,
       debug: false,
@@ -120,7 +120,7 @@ impl Intcode {
           self.ipr += 4;
         }
         Instruction::Input(loc) => {
-          let inp: i32;
+          let inp: i64;
           match self.inputs.get(self.next_input) {
             Some(val) => {
               inp = *val;
@@ -143,7 +143,7 @@ impl Intcode {
           self.ipr += 2;
         }
         Instruction::Output(p) => {
-          let output: i32 = match p {
+          let output: i64 = match p {
             Parameter::Position(pos) => self.program[pos as usize],
             Parameter::Immediate(val) => val,
           };
@@ -223,15 +223,15 @@ impl Intcode {
   }
 }
 
-fn get_value(parameter: Parameter, program: &[i32]) -> i32 {
+fn get_value(parameter: Parameter, program: &[i64]) -> i64 {
   match parameter {
     Parameter::Position(p) => program[p as usize],
     Parameter::Immediate(v) => v,
   }
 }
 
-fn get_instruction(program: &[i32]) -> Instruction {
-  let opcode = program[0] as u32;
+fn get_instruction(program: &[i64]) -> Instruction {
+  let opcode = program[0] as u64;
   match opcode % 100 {
     1 => {
       let param_1 = get_param(get_mode(opcode, 1), program[1]);
@@ -280,15 +280,15 @@ fn get_instruction(program: &[i32]) -> Instruction {
   }
 }
 
-fn get_mode(opcode: u32, param_number: usize) -> u8 {
+fn get_mode(opcode: u64, param_number: usize) -> u8 {
   assert!(param_number > 0, "param_number should be > 0");
-  let divider = 10 * (10u32.pow(param_number as u32));
+  let divider = 10 * (10u64.pow(param_number as u32));
   ((opcode / divider) % 10).try_into().unwrap()
 }
 
-fn get_param(mode: u8, value: i32) -> Parameter {
+fn get_param(mode: u8, value: i64) -> Parameter {
   match mode {
-    0 => Parameter::Position(value as u32),
+    0 => Parameter::Position(value as u64),
     1 => Parameter::Immediate(value),
     _ => panic!("Found unknown parameter mode {} with value {}", mode, value),
   }

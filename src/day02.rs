@@ -16,7 +16,7 @@ impl Problem for DayTwo {
   }
 
   fn part_one(&self, input: &str) -> Option<String> {
-    let mut program: Vec<i32> = intcode::parse_program(input);
+    let mut program: Vec<i64> = intcode::parse_program(input);
 
     // before running the program,
     // replace position 1 with the value 12 and
@@ -35,8 +35,8 @@ impl Problem for DayTwo {
   }
 
   fn part_two(&self, input: &str) -> Option<String> {
-    let base_program: Vec<i32> = intcode::parse_program(input);
-    const TARGET: i32 = 19_690_720;
+    let base_program: Vec<i64> = intcode::parse_program(input);
+    const TARGET: i64 = 19_690_720;
 
     for noun in 0..99 {
       for verb in 0..99 {
