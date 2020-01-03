@@ -50,11 +50,11 @@ impl DaySix {
 }
 
 impl Problem for DaySix {
-  fn soln_one(&self) -> String {
-    "135690".to_string()
+  fn soln_one(&self) -> Option<String> {
+    Some("135690".to_string())
   }
 
-  fn part_one(&self, input: &str) -> String {
+  fn part_one(&self, input: &str) -> Option<String> {
     let pattern = Regex::new(r"^([A-Z\d]+)\)([A-Z\d]+)$").unwrap();
     let orbits: Vec<(&str, &str)> = input
       .split('\n')
@@ -72,14 +72,14 @@ impl Problem for DaySix {
     let height_map = Self::get_height_map(&orbit_map);
     let num_orbits: usize = height_map.values().sum();
 
-    num_orbits.to_string()
+    Some(num_orbits.to_string())
   }
 
-  fn soln_two(&self) -> String {
-    "298".to_string()
+  fn soln_two(&self) -> Option<String> {
+    Some("298".to_string())
   }
 
-  fn part_two(&self, input: &str) -> String {
+  fn part_two(&self, input: &str) -> Option<String> {
     let pattern = Regex::new(r"^([A-Z\d]+)\)([A-Z\d]+)$").unwrap();
     let orbits: Vec<(&str, &str)> = input
       .split('\n')
@@ -124,7 +124,7 @@ impl Problem for DaySix {
       length += 1;
     }
 
-    length.to_string()
+    Some(length.to_string())
   }
 }
 
@@ -147,7 +147,7 @@ mod tests {
                  E)J\n\
                  J)K\n\
                  K)L";
-    assert_eq!(problem.part_one(input), "42");
+    assert_eq!(problem.part_one(input).unwrap(), "42");
   }
 
   #[test]
@@ -166,6 +166,6 @@ mod tests {
                  K)L\n\
                  K)YOU\n\
                  I)SAN";
-    assert_eq!(problem.part_two(input), "4");
+    assert_eq!(problem.part_two(input).unwrap(), "4");
   }
 }

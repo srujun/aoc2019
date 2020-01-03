@@ -71,34 +71,38 @@ impl DayFour {
 }
 
 impl Problem for DayFour {
-  fn soln_one(&self) -> String {
-    "1686".to_string()
+  fn soln_one(&self) -> Option<String> {
+    Some("1686".to_string())
   }
 
-  fn part_one(&self, input: &str) -> String {
+  fn part_one(&self, input: &str) -> Option<String> {
     let mut nums = input.split('-');
     let start: u32 = nums.next().unwrap().parse().unwrap();
     let end: u32 = nums.next().unwrap().parse().unwrap();
 
-    (start..=end)
-      .filter(|&num| Self::check_part_one(num))
-      .count()
-      .to_string()
+    Some(
+      (start..=end)
+        .filter(|&num| Self::check_part_one(num))
+        .count()
+        .to_string(),
+    )
   }
 
-  fn soln_two(&self) -> String {
-    "1145".to_string()
+  fn soln_two(&self) -> Option<String> {
+    Some("1145".to_string())
   }
 
-  fn part_two(&self, input: &str) -> String {
+  fn part_two(&self, input: &str) -> Option<String> {
     let mut nums = input.split('-');
     let start: u32 = nums.next().unwrap().parse().unwrap();
     let end: u32 = nums.next().unwrap().parse().unwrap();
 
-    (start..=end)
-      .filter(|&num| Self::check_part_two(num))
-      .count()
-      .to_string()
+    Some(
+      (start..=end)
+        .filter(|&num| Self::check_part_two(num))
+        .count()
+        .to_string(),
+    )
   }
 }
 

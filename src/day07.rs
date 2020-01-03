@@ -72,13 +72,13 @@ const SERIES_PHASES: Range<u8> = (0..5);
 const LOOP_PHASES: Range<u8> = (5..10);
 
 impl Problem for DaySeven {
-  fn soln_one(&self) -> String {
-    "22012".to_string()
+  fn soln_one(&self) -> Option<String> {
+    Some("22012".to_string())
   }
 
   // 1st input: phase setting
   // 2nd input: amp's input signal (prev amp's output)
-  fn part_one(&self, program: &str) -> String {
+  fn part_one(&self, program: &str) -> Option<String> {
     let amp_program: Vec<i32> = intcode::parse_program(program);
 
     let phase_permutations = SERIES_PHASES.permutations(NUM_AMPS);
@@ -87,14 +87,14 @@ impl Problem for DaySeven {
       .collect();
 
     // find the largest output
-    all_outputs.iter().max().map(i32::to_string).unwrap()
+    Some(all_outputs.iter().max().map(i32::to_string).unwrap())
   }
 
-  fn soln_two(&self) -> String {
-    "4039164".to_string()
+  fn soln_two(&self) -> Option<String> {
+    Some("4039164".to_string())
   }
 
-  fn part_two(&self, program: &str) -> String {
+  fn part_two(&self, program: &str) -> Option<String> {
     let amp_program: Vec<i32> = intcode::parse_program(program);
 
     let phase_permutations = LOOP_PHASES.permutations(NUM_AMPS);
@@ -103,7 +103,7 @@ impl Problem for DaySeven {
       .collect();
 
     // find the largest output
-    all_outputs.iter().max().map(i32::to_string).unwrap()
+    Some(all_outputs.iter().max().map(i32::to_string).unwrap())
   }
 }
 
@@ -116,7 +116,9 @@ mod tests {
   fn part_one_case1() {
     let problem = DaySeven::new();
     assert_eq!(
-      problem.part_one("3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0"),
+      problem
+        .part_one("3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0")
+        .unwrap(),
       "43210"
     );
   }
@@ -125,10 +127,12 @@ mod tests {
   fn part_one_case2() {
     let problem = DaySeven::new();
     assert_eq!(
-      problem.part_one(
-        "3,23,3,24,1002,24,10,24,1002,23,-1,23,\
-         101,5,23,23,1,24,23,23,4,23,99,0,0"
-      ),
+      problem
+        .part_one(
+          "3,23,3,24,1002,24,10,24,1002,23,-1,23,\
+           101,5,23,23,1,24,23,23,4,23,99,0,0"
+        )
+        .unwrap(),
       "54321"
     );
   }
@@ -137,10 +141,12 @@ mod tests {
   fn part_one_case3() {
     let problem = DaySeven::new();
     assert_eq!(
-      problem.part_one(
-        "3,31,3,32,1002,32,10,32,1001,31,-2,31,1007,31,0,33,\
-         1002,33,7,33,1,33,31,31,1,32,31,31,4,31,99,0,0,0"
-      ),
+      problem
+        .part_one(
+          "3,31,3,32,1002,32,10,32,1001,31,-2,31,1007,31,0,33,\
+           1002,33,7,33,1,33,31,31,1,32,31,31,4,31,99,0,0,0"
+        )
+        .unwrap(),
       "65210"
     );
   }
@@ -149,10 +155,12 @@ mod tests {
   fn part_two_case1() {
     let problem = DaySeven::new();
     assert_eq!(
-      problem.part_two(
-        "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,\
-         27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5"
-      ),
+      problem
+        .part_two(
+          "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,\
+           27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5"
+        )
+        .unwrap(),
       "139629729"
     );
   }
@@ -161,11 +169,13 @@ mod tests {
   fn part_two_case2() {
     let problem = DaySeven::new();
     assert_eq!(
-      problem.part_two(
-        "3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,\
-         -5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,\
-         53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10"
-      ),
+      problem
+        .part_two(
+          "3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,\
+           -5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,\
+           53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10"
+        )
+        .unwrap(),
       "18216"
     );
   }

@@ -39,24 +39,32 @@ fn print_problem(day: usize) -> Result<(), String> {
   let input = fs::read_to_string(format!("inputs/day{}.txt", day_str)).unwrap();
 
   println!("{}", format!("DAY {}", day_str).blue().bold());
-
-  // Part 1
-  let expected = problem.soln_one();
-  let actual = problem.part_one(&input);
-  println!("Part 1: (expected answer: {})", expected.bold());
-  println!("Actual: {} {}", actual.bold(), result(&expected, &actual));
-
-  // Part 2
-  let expected = problem.soln_two();
-  let actual = problem.part_two(&input);
-  println!("Part 2: (expected answer: {})", expected.bold());
-  println!("Actual: {} {}", actual.bold(), result(&expected, &actual));
+  print_part(1, &problem.soln_one(), &problem.part_one(&input));
+  print_part(2, &problem.soln_two(), &problem.part_two(&input));
 
   Ok(())
 }
 
-fn result(expected: &str, actual: &str) -> String {
-  if expected == actual {
+fn print_part(num: usize, expected: &Option<String>, actual: &Option<String>) {
+  println!(
+    "Part {}: (expected answer: {})",
+    num,
+    expected.as_ref().unwrap_or(&"unknown".to_string()).bold()
+  );
+  println!(
+    "Actual: {} {}",
+    actual
+      .as_ref()
+      .unwrap_or(&"unimplemented".to_string())
+      .bold(),
+    result(&expected, &actual)
+  );
+}
+
+fn result(expected: &Option<String>, actual: &Option<String>) -> String {
+  if expected.is_none() {
+    "??".yellow().to_string()
+  } else if expected == actual {
     "✓".green().to_string()
   } else {
     "✗".red().to_string()

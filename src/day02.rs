@@ -11,11 +11,11 @@ impl DayTwo {
 }
 
 impl Problem for DayTwo {
-  fn soln_one(&self) -> String {
-    "2692315".to_string()
+  fn soln_one(&self) -> Option<String> {
+    Some("2692315".to_string())
   }
 
-  fn part_one(&self, input: &str) -> String {
+  fn part_one(&self, input: &str) -> Option<String> {
     let mut program: Vec<i32> = intcode::parse_program(input);
 
     // before running the program,
@@ -27,14 +27,14 @@ impl Problem for DayTwo {
     let mut intcode = Intcode::new(program);
     intcode.run();
 
-    intcode.program[0].to_string()
+    Some(intcode.program[0].to_string())
   }
 
-  fn soln_two(&self) -> String {
-    "9507".to_string()
+  fn soln_two(&self) -> Option<String> {
+    Some("9507".to_string())
   }
 
-  fn part_two(&self, input: &str) -> String {
+  fn part_two(&self, input: &str) -> Option<String> {
     let base_program: Vec<i32> = intcode::parse_program(input);
     const TARGET: i32 = 19_690_720;
 
@@ -46,11 +46,11 @@ impl Problem for DayTwo {
         let mut intcode = Intcode::new(program);
         intcode.run();
         if TARGET == intcode.program[0] {
-          return (noun * 100 + verb).to_string();
+          return Some((noun * 100 + verb).to_string());
         }
       }
     }
-    "Not found!".to_string()
+    Some("Not found!".to_string())
   }
 }
 

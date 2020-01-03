@@ -22,24 +22,24 @@ impl DayOne {
 }
 
 impl Problem for DayOne {
-  fn soln_one(&self) -> String {
-    "3412496".to_string()
+  fn soln_one(&self) -> Option<String> {
+    Some("3412496".to_string())
   }
 
-  fn part_one(&self, input: &str) -> String {
+  fn part_one(&self, input: &str) -> Option<String> {
     let masses: Vec<u32> = input
       .split('\n')
       .map(|s| s.parse())
       .filter_map(Result::ok)
       .collect();
-    Self::fuel(&masses).to_string()
+    Some(Self::fuel(&masses).to_string())
   }
 
-  fn soln_two(&self) -> String {
-    "5115845".to_string()
+  fn soln_two(&self) -> Option<String> {
+    Some("5115845".to_string())
   }
 
-  fn part_two(&self, input: &str) -> String {
+  fn part_two(&self, input: &str) -> Option<String> {
     let mut total_fuel = 0;
     for mass_str in input.split('\n') {
       let mass: u32 = mass_str.parse().unwrap();
@@ -55,7 +55,7 @@ impl Problem for DayOne {
         total_fuel += fuel;
       }
     }
-    total_fuel.to_string()
+    Some(total_fuel.to_string())
   }
 }
 
