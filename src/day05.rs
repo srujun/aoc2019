@@ -18,7 +18,7 @@ impl Problem for DayFive {
   }
 
   fn part_one(&self, program: &str) -> String {
-    let mut program: Vec<i32> = intcode::parse_program(program);
+    let program: Vec<i32> = intcode::parse_program(program);
 
     let inputs = if self.inputs.is_empty() {
       vec![1]
@@ -26,9 +26,12 @@ impl Problem for DayFive {
       self.inputs.clone()
     };
 
-    let outputs = Intcode::with_inputs(false, inputs).run(&mut program);
+    let mut intcode = Intcode::new(program);
+    intcode.inputs = inputs;
+    intcode.run();
 
-    outputs
+    intcode
+      .outputs
       .last()
       .map(i32::to_string)
       .unwrap_or_else(|| "".to_string())
@@ -39,7 +42,7 @@ impl Problem for DayFive {
   }
 
   fn part_two(&self, program: &str) -> String {
-    let mut program: Vec<i32> = intcode::parse_program(program);
+    let program: Vec<i32> = intcode::parse_program(program);
 
     let inputs = if self.inputs.is_empty() {
       vec![5]
@@ -47,9 +50,12 @@ impl Problem for DayFive {
       self.inputs.clone()
     };
 
-    let outputs = Intcode::with_inputs(false, inputs).run(&mut program);
+    let mut intcode = Intcode::new(program);
+    intcode.inputs = inputs;
+    intcode.run();
 
-    outputs
+    intcode
+      .outputs
       .last()
       .map(i32::to_string)
       .unwrap_or_else(|| "".to_string())

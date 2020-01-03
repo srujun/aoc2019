@@ -24,9 +24,10 @@ impl Problem for DayTwo {
     program[1] = 12;
     program[2] = 2;
 
-    Intcode::new(false).run(&mut program);
+    let mut intcode = Intcode::new(program);
+    intcode.run();
 
-    program[0].to_string()
+    intcode.program[0].to_string()
   }
 
   fn soln_two(&self) -> String {
@@ -35,15 +36,16 @@ impl Problem for DayTwo {
 
   fn part_two(&self, input: &str) -> String {
     let base_program: Vec<i32> = intcode::parse_program(input);
-    let target = 19_690_720;
+    const TARGET: i32 = 19_690_720;
 
     for noun in 0..99 {
       for verb in 0..99 {
         let mut program = base_program.clone();
         program[1] = noun;
         program[2] = verb;
-        Intcode::new(false).run(&mut program);
-        if target == program[0] {
+        let mut intcode = Intcode::new(program);
+        intcode.run();
+        if TARGET == intcode.program[0] {
           return (noun * 100 + verb).to_string();
         }
       }
@@ -58,29 +60,29 @@ mod tests {
 
   #[test]
   fn case1() {
-    let mut program = vec![1, 0, 0, 0, 99];
-    Intcode::new(false).run(&mut program);
-    assert_eq!(program, vec![2, 0, 0, 0, 99]);
+    let mut intcode = Intcode::new(vec![1, 0, 0, 0, 99]);
+    intcode.run();
+    assert_eq!(intcode.program, vec![2, 0, 0, 0, 99]);
   }
 
   #[test]
   fn case2() {
-    let mut program = vec![2, 3, 0, 3, 99];
-    Intcode::new(false).run(&mut program);
-    assert_eq!(program, vec![2, 3, 0, 6, 99]);
+    let mut intcode = Intcode::new(vec![2, 3, 0, 3, 99]);
+    intcode.run();
+    assert_eq!(intcode.program, vec![2, 3, 0, 6, 99]);
   }
 
   #[test]
   fn case3() {
-    let mut program = vec![2, 4, 4, 5, 99, 0];
-    Intcode::new(false).run(&mut program);
-    assert_eq!(program, vec![2, 4, 4, 5, 99, 9801]);
+    let mut intcode = Intcode::new(vec![2, 4, 4, 5, 99, 0]);
+    intcode.run();
+    assert_eq!(intcode.program, vec![2, 4, 4, 5, 99, 9801]);
   }
 
   #[test]
   fn case4() {
-    let mut program = vec![1, 1, 1, 4, 99, 5, 6, 0, 99];
-    Intcode::new(false).run(&mut program);
-    assert_eq!(program, vec![30, 1, 1, 4, 2, 5, 6, 0, 99]);
+    let mut intcode = Intcode::new(vec![1, 1, 1, 4, 99, 5, 6, 0, 99]);
+    intcode.run();
+    assert_eq!(intcode.program, vec![30, 1, 1, 4, 2, 5, 6, 0, 99]);
   }
 }

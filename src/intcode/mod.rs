@@ -1,6 +1,5 @@
 use std::convert::TryInto;
 use std::fmt;
-use std::io::{self, Write};
 
 pub fn parse_program(program: &str) -> Vec<i32> {
   program
@@ -54,38 +53,44 @@ impl fmt::Display for Instruction {
 }
 
 pub struct Intcode {
-  debug: bool,
-  inputs: Vec<i32>,
+  pub program: Vec<i32>,
+  pub debug: bool,
+  pub inputs: Vec<i32>,
+  next_input: usize,
+  pub outputs: Vec<i32>,
+  ipr: usize,
+  iters: u32,
+  pub has_halted: bool,
 }
 
 const MAX_ITERS: u32 = 1_000_000;
 
 impl Intcode {
-  pub fn new(debug: bool) -> Self {
+  pub fn new(program: Vec<i32>) -> Self {
     Intcode {
-      debug,
+      program,
+      debug: false,
       inputs: Vec::new(),
+      next_input: 0,
+      outputs: Vec::new(),
+      ipr: 0,
+      iters: 0,
+      has_halted: false,
     }
   }
 
-  pub fn with_inputs(debug: bool, inputs: Vec<i32>) -> Self {
-    Intcode { debug, inputs }
-  }
+  pub fn run(&mut self) {
+    if self.has_halted {
+      panic!("Program has already halted!");
+    }
 
-  pub fn run(&self, program: &mut Vec<i32>) -> Vec<i32> {
-    let mut outputs: Vec<i32> = Vec::new();
-
-    let mut curr_input = 0;
-    let mut ipr = 0;
-    let mut iters = 0;
-
-    while ipr < program.len() {
-      iters += 1;
-      if iters > MAX_ITERS {
+    while self.ipr < self.program.len() {
+      self.iters += 1;
+      if self.iters > MAX_ITERS {
         panic!("Ran too many times!");
       }
 
-      let instruction = get_instruction(&program[ipr..]);
+      let instruction = get_instruction(&self.program[self.ipr..]);
       if self.debug {
         println!("{}", instruction);
       }
@@ -93,115 +98,128 @@ impl Intcode {
         Instruction::Add(p1, p2, out) => {
           match out {
             Parameter::Position(pos) => {
-              let val1 = get_value(p1, &program);
-              let val2 = get_value(p2, &program);
-              program[pos as usize] = val1 + val2;
+              let val1 = get_value(p1, &self.program);
+              let val2 = get_value(p2, &self.program);
+              self.program[pos as usize] = val1 + val2;
             }
             _ => panic!("Add output param must always be position!"),
           };
 
-          ipr += 4;
+          self.ipr += 4;
         }
         Instruction::Multiply(p1, p2, out) => {
           match out {
             Parameter::Position(pos) => {
-              let val1 = get_value(p1, &program);
-              let val2 = get_value(p2, &program);
-              program[pos as usize] = val1 * val2;
+              let val1 = get_value(p1, &self.program);
+              let val2 = get_value(p2, &self.program);
+              self.program[pos as usize] = val1 * val2;
             }
             _ => panic!("Multiply output param must always be position!"),
           };
 
-          ipr += 4;
+          self.ipr += 4;
         }
         Instruction::Input(loc) => {
-          let inp: i32 = match self.inputs.get(curr_input) {
-            Some(val) => *val,
-            None => get_input(),
+          let inp: i32;
+          match self.inputs.get(self.next_input) {
+            Some(val) => {
+              inp = *val;
+              self.next_input += 1;
+            }
+            None => {
+              if self.debug {
+                println!("No input available, pausing execution...");
+              }
+              return;
+            }
           };
-          curr_input += 1;
           match loc {
             Parameter::Position(pos) => {
-              program[pos as usize] = inp;
+              self.program[pos as usize] = inp;
             }
             _ => panic!("Input param must always be position!"),
           };
 
-          ipr += 2;
+          self.ipr += 2;
         }
         Instruction::Output(p) => {
           let output: i32 = match p {
-            Parameter::Position(pos) => program[pos as usize],
+            Parameter::Position(pos) => self.program[pos as usize],
             Parameter::Immediate(val) => val,
           };
-          outputs.push(output);
+          self.outputs.push(output);
           if self.debug {
             println!("Output: {}", output);
           }
 
-          ipr += 2;
+          self.ipr += 2;
         }
         Instruction::JumpIfTrue(param, value) => {
-          let should_jump = get_value(param, &program) != 0;
+          let should_jump = get_value(param, &self.program) != 0;
           if should_jump {
-            ipr = match value {
-              Parameter::Position(pos) => program[pos as usize] as usize,
+            self.ipr = match value {
+              Parameter::Position(pos) => self.program[pos as usize] as usize,
               Parameter::Immediate(val) => val as usize,
             }
           } else {
-            ipr += 3;
+            self.ipr += 3;
           }
         }
         Instruction::JumpIfFalse(param, value) => {
-          let should_jump = get_value(param, &program) == 0;
+          let should_jump = get_value(param, &self.program) == 0;
           if should_jump {
-            ipr = match value {
-              Parameter::Position(pos) => program[pos as usize] as usize,
+            self.ipr = match value {
+              Parameter::Position(pos) => self.program[pos as usize] as usize,
               Parameter::Immediate(val) => val as usize,
             }
           } else {
-            ipr += 3;
+            self.ipr += 3;
           }
         }
         Instruction::LessThan(p1, p2, out) => {
           match out {
             Parameter::Position(pos) => {
-              let val1 = get_value(p1, &program);
-              let val2 = get_value(p2, &program);
+              let val1 = get_value(p1, &self.program);
+              let val2 = get_value(p2, &self.program);
               if val1 < val2 {
-                program[pos as usize] = 1;
+                self.program[pos as usize] = 1;
               } else {
-                program[pos as usize] = 0;
+                self.program[pos as usize] = 0;
               }
             }
             _ => panic!("LessThan output param must always be position!"),
           };
 
-          ipr += 4;
+          self.ipr += 4;
         }
         Instruction::Equal(p1, p2, out) => {
           match out {
             Parameter::Position(pos) => {
-              let val1 = get_value(p1, &program);
-              let val2 = get_value(p2, &program);
+              let val1 = get_value(p1, &self.program);
+              let val2 = get_value(p2, &self.program);
               if val1 == val2 {
-                program[pos as usize] = 1;
+                self.program[pos as usize] = 1;
               } else {
-                program[pos as usize] = 0;
+                self.program[pos as usize] = 0;
               }
             }
             _ => panic!("LessThan output param must always be position!"),
           };
 
-          ipr += 4;
+          self.ipr += 4;
         }
         Instruction::Halt => {
-          return outputs;
+          self.has_halted = true;
+          return;
         }
       };
     }
 
-    panic!("Program finished without halting!");
+    panic!(
+      "IPR={} exceeded program length {}!",
+      self.ipr,
+      self.program.len()
+    );
   }
 }
 
@@ -274,18 +292,6 @@ fn get_param(mode: u8, value: i32) -> Parameter {
     1 => Parameter::Immediate(value),
     _ => panic!("Found unknown parameter mode {} with value {}", mode, value),
   }
-}
-
-fn get_input() -> i32 {
-  print!("Input: ");
-  io::stdout().flush().unwrap();
-
-  let mut input = String::new();
-  match io::stdin().read_line(&mut input) {
-    Ok(_) => {}
-    Err(error) => panic!("error: {}", error),
-  };
-  input.trim().parse().unwrap()
 }
 
 #[cfg(test)]
