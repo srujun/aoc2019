@@ -27,7 +27,7 @@ impl Problem for DayTwo {
     let mut intcode = Intcode::new(program);
     intcode.run();
 
-    Some(intcode.program[0].to_string())
+    Some(intcode.memory.get_panic(0).to_string())
   }
 
   fn soln_two(&self) -> Option<String> {
@@ -45,7 +45,7 @@ impl Problem for DayTwo {
         program[2] = verb;
         let mut intcode = Intcode::new(program);
         intcode.run();
-        if TARGET == intcode.program[0] {
+        if TARGET == *intcode.memory.get_panic(0) {
           return Some((noun * 100 + verb).to_string());
         }
       }
@@ -62,27 +62,27 @@ mod tests {
   fn case1() {
     let mut intcode = Intcode::new(vec![1, 0, 0, 0, 99]);
     intcode.run();
-    assert_eq!(intcode.program, vec![2, 0, 0, 0, 99]);
+    assert_eq!(intcode.memory.program, vec![2, 0, 0, 0, 99]);
   }
 
   #[test]
   fn case2() {
     let mut intcode = Intcode::new(vec![2, 3, 0, 3, 99]);
     intcode.run();
-    assert_eq!(intcode.program, vec![2, 3, 0, 6, 99]);
+    assert_eq!(intcode.memory.program, vec![2, 3, 0, 6, 99]);
   }
 
   #[test]
   fn case3() {
     let mut intcode = Intcode::new(vec![2, 4, 4, 5, 99, 0]);
     intcode.run();
-    assert_eq!(intcode.program, vec![2, 4, 4, 5, 99, 9801]);
+    assert_eq!(intcode.memory.program, vec![2, 4, 4, 5, 99, 9801]);
   }
 
   #[test]
   fn case4() {
     let mut intcode = Intcode::new(vec![1, 1, 1, 4, 99, 5, 6, 0, 99]);
     intcode.run();
-    assert_eq!(intcode.program, vec![30, 1, 1, 4, 2, 5, 6, 0, 99]);
+    assert_eq!(intcode.memory.program, vec![30, 1, 1, 4, 2, 5, 6, 0, 99]);
   }
 }
