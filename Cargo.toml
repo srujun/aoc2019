@@ -5,3 +5,6 @@ authors = ["Srujun Thanmay Gupta <srujun@srujun.com>"]
 edition = "2018"
 
 [dependencies]
+colored = "1.9.1"
+itertools = "0.8.2"
+regex = "1"

@@ -88,9 +88,14 @@ struct Intersection {
   point: Coord,
 }
 
+#[derive(Default)]
 pub struct DayThree {}
 
 impl DayThree {
+  pub fn new() -> Self {
+    Self {}
+  }
+
   fn build_maps(horizontals: &mut WireMap, verticals: &mut WireMap, wire: &[Movement]) {
     let mut curr_pos = Coord::new();
     let mut steps: u32 = 0;
@@ -266,11 +271,11 @@ impl DayThree {
 }
 
 impl Problem for DayThree {
-  fn soln_one(&self) -> String {
-    "5357".to_string()
+  fn soln_one(&self) -> Option<String> {
+    Some("5357".to_string())
   }
 
-  fn part_one(&self, input: &str) -> String {
+  fn part_one(&self, input: &str) -> Option<String> {
     let mut wires = input.split('\n');
     let wire1: Vec<Movement> = wires
       .next()
@@ -297,20 +302,22 @@ impl Problem for DayThree {
     // println!("Verticals: {:?}", verticals);
 
     // find the closest intersection by manhattan distance
-    Self::get_intersections(&horizontals, &verticals, &wire2)
-      .iter()
-      .map(|isec| isec.point)
-      .map(|coord| coord.manhattan())
-      .filter(|&x| x > 0)
-      .fold(u32::MAX, cmp::min)
-      .to_string()
+    Some(
+      Self::get_intersections(&horizontals, &verticals, &wire2)
+        .iter()
+        .map(|isec| isec.point)
+        .map(|coord| coord.manhattan())
+        .filter(|&x| x > 0)
+        .fold(u32::MAX, cmp::min)
+        .to_string(),
+    )
   }
 
-  fn soln_two(&self) -> String {
-    "101956".to_string()
+  fn soln_two(&self) -> Option<String> {
+    Some("101956".to_string())
   }
 
-  fn part_two(&self, input: &str) -> String {
+  fn part_two(&self, input: &str) -> Option<String> {
     let mut wires = input.split('\n');
     let wire1: Vec<Movement> = wires
       .next()
@@ -333,12 +340,14 @@ impl Problem for DayThree {
     // Populate the WireMaps
     Self::build_maps(&mut horizontals, &mut verticals, &wire1);
 
-    Self::get_intersections(&horizontals, &verticals, &wire2)
-      .iter()
-      .map(|isec| isec.wire1_steps + isec.wire2_steps)
-      .filter(|&x| x > 0)
-      .fold(u32::MAX, cmp::min)
-      .to_string()
+    Some(
+      Self::get_intersections(&horizontals, &verticals, &wire2)
+        .iter()
+        .map(|isec| isec.wire1_steps + isec.wire2_steps)
+        .filter(|&x| x > 0)
+        .fold(u32::MAX, cmp::min)
+        .to_string(),
+    )
   }
 }
 
@@ -354,7 +363,7 @@ mod tests {
       "R8,U5,L5,D3\n\
        U7,R6,D4,L4",
     );
-    assert_eq!(answer, "6");
+    assert_eq!(answer.unwrap(), "6");
   }
 
   #[test]
@@ -364,7 +373,7 @@ mod tests {
       "R75,D30,R83,U83,L12,D49,R71,U7,L72\n\
        U62,R66,U55,R34,D71,R55,D58,R83",
     );
-    assert_eq!(answer, "159");
+    assert_eq!(answer.unwrap(), "159");
   }
 
   #[test]
@@ -374,7 +383,7 @@ mod tests {
       "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51\n\
        U98,R91,D20,R16,D67,R40,U7,R15,U6,R7",
     );
-    assert_eq!(answer, "135");
+    assert_eq!(answer.unwrap(), "135");
   }
 
   #[test]
@@ -384,7 +393,7 @@ mod tests {
       "R8,U5,L5,D3\n\
        U7,R6,D4,L4",
     );
-    assert_eq!(answer, "30");
+    assert_eq!(answer.unwrap(), "30");
   }
 
   #[test]
@@ -394,7 +403,7 @@ mod tests {
       "R75,D30,R83,U83,L12,D49,R71,U7,L72\n\
        U62,R66,U55,R34,D71,R55,D58,R83",
     );
-    assert_eq!(answer, "610");
+    assert_eq!(answer.unwrap(), "610");
   }
 
   #[test]
@@ -404,6 +413,6 @@ mod tests {
       "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51\n\
        U98,R91,D20,R16,D67,R40,U7,R15,U6,R7",
     );
-    assert_eq!(answer, "410");
+    assert_eq!(answer.unwrap(), "410");
   }
 }
