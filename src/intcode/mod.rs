@@ -1,18 +1,39 @@
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::fmt;
 
-pub fn parse_program(program: &str) -> Vec<i32> {
+pub fn parse_program(program: &str) -> Vec<i64> {
   program
     .split(',')
-    .map(|x| x.parse::<i32>())
+    .map(|x| x.parse::<i64>())
     .filter_map(Result::ok)
     .collect()
 }
 
 #[derive(Clone, Copy, PartialEq)]
 enum Parameter {
-  Position(u32),
-  Immediate(i32),
+  Position(u64),
+  Immediate(i64),
+  Relative(i64),
+}
+
+impl Parameter {
+  fn create(mode: u8, value: i64) -> Parameter {
+    match mode {
+      0 => Parameter::Position(value as u64),
+      1 => Parameter::Immediate(value),
+      2 => Parameter::Relative(value),
+      _ => panic!("Found unknown parameter mode {} with value {}", mode, value),
+    }
+  }
+
+  fn get_value(&self, memory: &Memory) -> i64 {
+    match self {
+      Parameter::Position(p) => *memory.get_panic(*p as usize),
+      Parameter::Immediate(v) => *v,
+      Parameter::Relative(o) => *memory.get_panic((memory.relative_base + *o) as usize),
+    }
+  }
 }
 
 impl fmt::Display for Parameter {
@@ -20,6 +41,7 @@ impl fmt::Display for Parameter {
     match self {
       Parameter::Position(p) => write!(f, "pos({})", p),
       Parameter::Immediate(v) => write!(f, "imm({})", v),
+      Parameter::Relative(o) => write!(f, "rel({})", o),
     }
   }
 }
@@ -33,6 +55,7 @@ enum Instruction {
   JumpIfFalse(Parameter, Parameter),
   LessThan(Parameter, Parameter, Parameter),
   Equal(Parameter, Parameter, Parameter),
+  RelativeBaseOffset(Parameter),
   Halt,
 }
 
@@ -47,17 +70,73 @@ impl fmt::Display for Instruction {
       Instruction::JumpIfFalse(p, v) => write!(f, "JIF [{}] -> {}", p, v),
       Instruction::LessThan(p1, p2, out) => write!(f, "LT [{}, {}] -> {}", p1, p2, out),
       Instruction::Equal(p1, p2, out) => write!(f, "EQ [{}, {}] -> {}", p1, p2, out),
+      Instruction::RelativeBaseOffset(p) => write!(f, "RBO {}", p),
       Instruction::Halt => write!(f, "HALT"),
     }
   }
 }
 
+pub struct Memory {
+  pub program: Vec<i64>,
+  additional: HashMap<usize, i64>,
+  relative_base: i64,
+}
+
+impl Memory {
+  fn new(program: Vec<i64>) -> Self {
+    Self {
+      program,
+      additional: HashMap::new(),
+      relative_base: 0,
+    }
+  }
+
+  fn exists(&self, address: usize) -> bool {
+    address < self.program.len() || self.additional.contains_key(&address)
+  }
+
+  fn get(&self, address: usize) -> Option<&i64> {
+    self
+      .program
+      .get(address)
+      .or_else(|| self.additional.get(&address))
+  }
+
+  fn get_rel(&self, offset: i64) -> Option<&i64> {
+    self.get((self.relative_base + offset) as usize)
+  }
+
+  pub fn get_panic(&self, address: usize) -> &i64 {
+    self
+      .get(address)
+      .unwrap_or_else(|| panic!("Address {} out of bounds!", address))
+  }
+
+  pub fn get_rel_panic(&self, offset: i64) -> &i64 {
+    self
+      .get_rel(offset)
+      .unwrap_or_else(|| panic!("Offset {} goes out of bounds!", offset))
+  }
+
+  fn set(&mut self, address: usize, value: i64) {
+    if address < self.program.len() {
+      self.program[address] = value;
+    } else {
+      self.additional.insert(address, value);
+    }
+  }
+
+  fn set_rel(&mut self, offset: i64, value: i64) {
+    self.set((self.relative_base + offset) as usize, value);
+  }
+}
+
 pub struct Intcode {
-  pub program: Vec<i32>,
+  pub memory: Memory,
   pub debug: bool,
-  pub inputs: Vec<i32>,
+  pub inputs: Vec<i64>,
   next_input: usize,
-  pub outputs: Vec<i32>,
+  pub outputs: Vec<i64>,
   ipr: usize,
   iters: u32,
   pub has_halted: bool,
@@ -66,9 +145,9 @@ pub struct Intcode {
 const MAX_ITERS: u32 = 1_000_000;
 
 impl Intcode {
-  pub fn new(program: Vec<i32>) -> Self {
+  pub fn new(program: Vec<i64>) -> Self {
     Intcode {
-      program,
+      memory: Memory::new(program),
       debug: false,
       inputs: Vec::new(),
       next_input: 0,
@@ -79,28 +158,90 @@ impl Intcode {
     }
   }
 
+  fn get_param(&self, opcode: u64, number: usize) -> Parameter {
+    let value = *self.memory.get_panic(self.ipr + number);
+    Parameter::create(get_mode(opcode, number), value)
+  }
+
+  fn get_instruction(&self) -> Instruction {
+    let opcode = *self.memory.get_panic(self.ipr) as u64;
+    match opcode % 100 {
+      1 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        let param_3 = self.get_param(opcode, 3);
+        Instruction::Add(param_1, param_2, param_3)
+      }
+      2 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        let param_3 = self.get_param(opcode, 3);
+        Instruction::Multiply(param_1, param_2, param_3)
+      }
+      3 => {
+        let param_1 = self.get_param(opcode, 1);
+        Instruction::Input(param_1)
+      }
+      4 => {
+        let param_1 = self.get_param(opcode, 1);
+        Instruction::Output(param_1)
+      }
+      5 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        Instruction::JumpIfTrue(param_1, param_2)
+      }
+      6 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        Instruction::JumpIfFalse(param_1, param_2)
+      }
+      7 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        let param_3 = self.get_param(opcode, 3);
+        Instruction::LessThan(param_1, param_2, param_3)
+      }
+      8 => {
+        let param_1 = self.get_param(opcode, 1);
+        let param_2 = self.get_param(opcode, 2);
+        let param_3 = self.get_param(opcode, 3);
+        Instruction::Equal(param_1, param_2, param_3)
+      }
+      9 => {
+        let param_1 = self.get_param(opcode, 1);
+        Instruction::RelativeBaseOffset(param_1)
+      }
+      99 => Instruction::Halt,
+      _ => panic!("Found unknown opcode {}", opcode),
+    }
+  }
+
   pub fn run(&mut self) {
     if self.has_halted {
       panic!("Program has already halted!");
     }
 
-    while self.ipr < self.program.len() {
+    while self.memory.exists(self.ipr) {
       self.iters += 1;
       if self.iters > MAX_ITERS {
         panic!("Ran too many times!");
       }
 
-      let instruction = get_instruction(&self.program[self.ipr..]);
+      let instruction = self.get_instruction();
       if self.debug {
         println!("{}", instruction);
       }
       match instruction {
         Instruction::Add(p1, p2, out) => {
+          let val1 = p1.get_value(&self.memory);
+          let val2 = p2.get_value(&self.memory);
           match out {
             Parameter::Position(pos) => {
-              let val1 = get_value(p1, &self.program);
-              let val2 = get_value(p2, &self.program);
-              self.program[pos as usize] = val1 + val2;
+              self.memory.set(pos as usize, val1 + val2);
+            }
+            Parameter::Relative(off) => {
+              self.memory.set_rel(off, val1 + val2);
             }
             _ => panic!("Add output param must always be position!"),
           };
@@ -108,11 +249,14 @@ impl Intcode {
           self.ipr += 4;
         }
         Instruction::Multiply(p1, p2, out) => {
+          let val1 = p1.get_value(&self.memory);
+          let val2 = p2.get_value(&self.memory);
           match out {
             Parameter::Position(pos) => {
-              let val1 = get_value(p1, &self.program);
-              let val2 = get_value(p2, &self.program);
-              self.program[pos as usize] = val1 * val2;
+              self.memory.set(pos as usize, val1 * val2);
+            }
+            Parameter::Relative(off) => {
+              self.memory.set_rel(off, val1 * val2);
             }
             _ => panic!("Multiply output param must always be position!"),
           };
@@ -120,7 +264,7 @@ impl Intcode {
           self.ipr += 4;
         }
         Instruction::Input(loc) => {
-          let inp: i32;
+          let inp: i64;
           match self.inputs.get(self.next_input) {
             Some(val) => {
               inp = *val;
@@ -135,7 +279,10 @@ impl Intcode {
           };
           match loc {
             Parameter::Position(pos) => {
-              self.program[pos as usize] = inp;
+              self.memory.set(pos as usize, inp);
+            }
+            Parameter::Relative(off) => {
+              self.memory.set_rel(off, inp);
             }
             _ => panic!("Input param must always be position!"),
           };
@@ -143,10 +290,7 @@ impl Intcode {
           self.ipr += 2;
         }
         Instruction::Output(p) => {
-          let output: i32 = match p {
-            Parameter::Position(pos) => self.program[pos as usize],
-            Parameter::Immediate(val) => val,
-          };
+          let output = p.get_value(&self.memory);
           self.outputs.push(output);
           if self.debug {
             println!("Output: {}", output);
@@ -155,37 +299,31 @@ impl Intcode {
           self.ipr += 2;
         }
         Instruction::JumpIfTrue(param, value) => {
-          let should_jump = get_value(param, &self.program) != 0;
+          let should_jump = param.get_value(&self.memory) != 0;
           if should_jump {
-            self.ipr = match value {
-              Parameter::Position(pos) => self.program[pos as usize] as usize,
-              Parameter::Immediate(val) => val as usize,
-            }
+            self.ipr = value.get_value(&self.memory) as usize;
           } else {
             self.ipr += 3;
           }
         }
         Instruction::JumpIfFalse(param, value) => {
-          let should_jump = get_value(param, &self.program) == 0;
+          let should_jump = param.get_value(&self.memory) == 0;
           if should_jump {
-            self.ipr = match value {
-              Parameter::Position(pos) => self.program[pos as usize] as usize,
-              Parameter::Immediate(val) => val as usize,
-            }
+            self.ipr = value.get_value(&self.memory) as usize;
           } else {
             self.ipr += 3;
           }
         }
         Instruction::LessThan(p1, p2, out) => {
+          let val1 = p1.get_value(&self.memory);
+          let val2 = p2.get_value(&self.memory);
+          let output = if val1 < val2 { 1 } else { 0 };
           match out {
             Parameter::Position(pos) => {
-              let val1 = get_value(p1, &self.program);
-              let val2 = get_value(p2, &self.program);
-              if val1 < val2 {
-                self.program[pos as usize] = 1;
-              } else {
-                self.program[pos as usize] = 0;
-              }
+              self.memory.set(pos as usize, output);
+            }
+            Parameter::Relative(off) => {
+              self.memory.set_rel(off, output);
             }
             _ => panic!("LessThan output param must always be position!"),
           };
@@ -193,20 +331,30 @@ impl Intcode {
           self.ipr += 4;
         }
         Instruction::Equal(p1, p2, out) => {
+          let val1 = p1.get_value(&self.memory);
+          let val2 = p2.get_value(&self.memory);
+          let output = if val1 == val2 { 1 } else { 0 };
           match out {
             Parameter::Position(pos) => {
-              let val1 = get_value(p1, &self.program);
-              let val2 = get_value(p2, &self.program);
-              if val1 == val2 {
-                self.program[pos as usize] = 1;
-              } else {
-                self.program[pos as usize] = 0;
-              }
+              self.memory.set(pos as usize, output);
+            }
+            Parameter::Relative(off) => {
+              self.memory.set_rel(off, output);
             }
             _ => panic!("LessThan output param must always be position!"),
           };
 
           self.ipr += 4;
+        }
+        Instruction::RelativeBaseOffset(p) => {
+          let change: i64 = match p {
+            Parameter::Position(pos) => *self.memory.get_panic(pos as usize),
+            Parameter::Immediate(val) => val,
+            Parameter::Relative(off) => *self.memory.get_rel_panic(off),
+          };
+          self.memory.relative_base += change;
+
+          self.ipr += 2;
         }
         Instruction::Halt => {
           self.has_halted = true;
@@ -215,83 +363,14 @@ impl Intcode {
       };
     }
 
-    panic!(
-      "IPR={} exceeded program length {}!",
-      self.ipr,
-      self.program.len()
-    );
+    panic!("IPR={} points to null instruction!", self.ipr);
   }
 }
 
-fn get_value(parameter: Parameter, program: &[i32]) -> i32 {
-  match parameter {
-    Parameter::Position(p) => program[p as usize],
-    Parameter::Immediate(v) => v,
-  }
-}
-
-fn get_instruction(program: &[i32]) -> Instruction {
-  let opcode = program[0] as u32;
-  match opcode % 100 {
-    1 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      let param_3 = get_param(get_mode(opcode, 3), program[3]);
-      Instruction::Add(param_1, param_2, param_3)
-    }
-    2 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      let param_3 = get_param(get_mode(opcode, 3), program[3]);
-      Instruction::Multiply(param_1, param_2, param_3)
-    }
-    3 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      Instruction::Input(param_1)
-    }
-    4 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      Instruction::Output(param_1)
-    }
-    5 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      Instruction::JumpIfTrue(param_1, param_2)
-    }
-    6 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      Instruction::JumpIfFalse(param_1, param_2)
-    }
-    7 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      let param_3 = get_param(get_mode(opcode, 3), program[3]);
-      Instruction::LessThan(param_1, param_2, param_3)
-    }
-    8 => {
-      let param_1 = get_param(get_mode(opcode, 1), program[1]);
-      let param_2 = get_param(get_mode(opcode, 2), program[2]);
-      let param_3 = get_param(get_mode(opcode, 3), program[3]);
-      Instruction::Equal(param_1, param_2, param_3)
-    }
-    99 => Instruction::Halt,
-    _ => panic!("Found unknown opcode {}", opcode),
-  }
-}
-
-fn get_mode(opcode: u32, param_number: usize) -> u8 {
+fn get_mode(opcode: u64, param_number: usize) -> u8 {
   assert!(param_number > 0, "param_number should be > 0");
-  let divider = 10 * (10u32.pow(param_number as u32));
+  let divider = 10 * (10u64.pow(param_number as u32));
   ((opcode / divider) % 10).try_into().unwrap()
-}
-
-fn get_param(mode: u8, value: i32) -> Parameter {
-  match mode {
-    0 => Parameter::Position(value as u32),
-    1 => Parameter::Immediate(value),
-    _ => panic!("Found unknown parameter mode {} with value {}", mode, value),
-  }
 }
 
 #[cfg(test)]

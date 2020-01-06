@@ -3,7 +3,7 @@ use crate::problem::Problem;
 
 #[derive(Default)]
 pub struct DayFive {
-  inputs: Vec<i32>,
+  inputs: Vec<i64>,
 }
 
 impl DayFive {
@@ -18,7 +18,7 @@ impl Problem for DayFive {
   }
 
   fn part_one(&self, program: &str) -> Option<String> {
-    let program: Vec<i32> = intcode::parse_program(program);
+    let program: Vec<i64> = intcode::parse_program(program);
 
     let inputs = if self.inputs.is_empty() {
       vec![1]
@@ -34,7 +34,7 @@ impl Problem for DayFive {
       intcode
         .outputs
         .last()
-        .map(i32::to_string)
+        .map(i64::to_string)
         .unwrap_or_else(|| "".to_string()),
     )
   }
@@ -44,7 +44,7 @@ impl Problem for DayFive {
   }
 
   fn part_two(&self, program: &str) -> Option<String> {
-    let program: Vec<i32> = intcode::parse_program(program);
+    let program: Vec<i64> = intcode::parse_program(program);
 
     let inputs = if self.inputs.is_empty() {
       vec![5]
@@ -60,7 +60,7 @@ impl Problem for DayFive {
       intcode
         .outputs
         .last()
-        .map(i32::to_string)
+        .map(i64::to_string)
         .unwrap_or_else(|| "".to_string()),
     )
   }
