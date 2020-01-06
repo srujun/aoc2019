@@ -13,6 +13,7 @@ use aoc2019::day07::DaySeven;
 use aoc2019::day08::DayEight;
 use aoc2019::day09::DayNine;
 use aoc2019::day10::DayTen;
+use aoc2019::day11::DayEleven;
 use aoc2019::problem::Problem;
 
 fn main() -> Result<(), String> {
@@ -88,21 +89,23 @@ fn get_problem(day: usize, debug: bool) -> Option<Box<dyn Problem>> {
       8 => Some(Box::new(DayEight::debug())),
       9 => Some(Box::new(DayNine::debug())),
       10 => Some(Box::new(DayTen::debug())),
+      11 => Some(Box::new(DayEleven::debug())),
       _ => None,
     }
   } else {
-  match day {
-    1 => Some(Box::new(DayOne::new())),
-    2 => Some(Box::new(DayTwo::new())),
-    3 => Some(Box::new(DayThree::new())),
-    4 => Some(Box::new(DayFour::new())),
-    5 => Some(Box::new(DayFive::new())),
-    6 => Some(Box::new(DaySix::new())),
-    7 => Some(Box::new(DaySeven::new())),
-    8 => Some(Box::new(DayEight::new())),
-    9 => Some(Box::new(DayNine::new())),
-    10 => Some(Box::new(DayTen::new())),
-    _ => None,
+    match day {
+      1 => Some(Box::new(DayOne::new())),
+      2 => Some(Box::new(DayTwo::new())),
+      3 => Some(Box::new(DayThree::new())),
+      4 => Some(Box::new(DayFour::new())),
+      5 => Some(Box::new(DayFive::new())),
+      6 => Some(Box::new(DaySix::new())),
+      7 => Some(Box::new(DaySeven::new())),
+      8 => Some(Box::new(DayEight::new())),
+      9 => Some(Box::new(DayNine::new())),
+      10 => Some(Box::new(DayTen::new())),
+      11 => Some(Box::new(DayEleven::new())),
+      _ => None,
+    }
   }
-}
 }
