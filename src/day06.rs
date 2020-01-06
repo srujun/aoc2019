@@ -12,10 +12,6 @@ const SAN: &str = "SAN";
 pub struct DaySix {}
 
 impl DaySix {
-  pub fn new() -> Self {
-    Self {}
-  }
-
   fn get_height_map<'a>(orbit_map: &HashMap<&'a str, &'a str>) -> HashMap<&'a str, usize> {
     let mut height_map = HashMap::new();
     height_map.insert(COM, 0);
@@ -50,6 +46,10 @@ impl DaySix {
 }
 
 impl Problem for DaySix {
+  fn new() -> Self {
+    Self {}
+  }
+
   fn soln_one(&self) -> Option<String> {
     Some("135690".to_string())
   }

@@ -1,4 +1,15 @@
 pub trait Problem {
+  fn new() -> Self
+  where
+    Self: Sized;
+
+  fn debug() -> Self
+  where
+    Self: Sized,
+  {
+    Self::new()
+  }
+
   fn soln_one(&self) -> Option<String> {
     None
   }

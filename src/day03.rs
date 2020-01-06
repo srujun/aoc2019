@@ -92,10 +92,6 @@ struct Intersection {
 pub struct DayThree {}
 
 impl DayThree {
-  pub fn new() -> Self {
-    Self {}
-  }
-
   fn build_maps(horizontals: &mut WireMap, verticals: &mut WireMap, wire: &[Movement]) {
     let mut curr_pos = Coord::new();
     let mut steps: u32 = 0;
@@ -271,6 +267,10 @@ impl DayThree {
 }
 
 impl Problem for DayThree {
+  fn new() -> Self {
+    Self {}
+  }
+
   fn soln_one(&self) -> Option<String> {
     Some("5357".to_string())
   }

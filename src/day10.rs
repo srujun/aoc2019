@@ -55,10 +55,6 @@ impl Asteroid {
 pub struct DayTen {}
 
 impl DayTen {
-  pub fn new() -> Self {
-    Self {}
-  }
-
   /// The problem statement uses a flipped Y axis (+Y is downwards).
   /// This function flips the Y coordinates.
   fn parse_asteroids(input: &str) -> Vec<Asteroid> {
@@ -100,6 +96,10 @@ impl DayTen {
 }
 
 impl Problem for DayTen {
+  fn new() -> Self {
+    Self {}
+  }
+
   fn soln_one(&self) -> Option<String> {
     Some("329".to_string())
   }

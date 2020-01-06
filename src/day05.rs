@@ -6,13 +6,13 @@ pub struct DayFive {
   inputs: Vec<i64>,
 }
 
-impl DayFive {
-  pub fn new() -> Self {
-    Self { inputs: Vec::new() }
-  }
-}
+impl DayFive {}
 
 impl Problem for DayFive {
+  fn new() -> Self {
+    Self { inputs: Vec::new() }
+  }
+
   fn soln_one(&self) -> Option<String> {
     Some("7839346".to_string())
   }

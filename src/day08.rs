@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use crate::problem::Problem;
 
-const SHOULD_PRINT: bool = false;
 const WIDTH: usize = 25;
 const HEIGHT: usize = 6;
 
@@ -73,17 +72,23 @@ mod helpers {
 }
 
 #[derive(Default)]
-pub struct DayEight {}
-
-impl DayEight {
-  pub fn new() -> Self {
-    Self {}
-  }
+pub struct DayEight {
+  debug: bool,
 }
+
+impl DayEight {}
 
 use helpers::{Image, Layer};
 
 impl Problem for DayEight {
+  fn new() -> Self {
+    Self { debug: false }
+  }
+
+  fn debug() -> Self {
+    Self { debug: true }
+  }
+
   fn soln_one(&self) -> Option<String> {
     Some("2562".to_string())
   }
@@ -109,25 +114,28 @@ impl Problem for DayEight {
   }
 
   fn part_two(&self, input: &str) -> Option<String> {
-    if SHOULD_PRINT {
-      let pixels: Vec<u8> = input
-        .chars()
-        .map(|c| c.to_digit(10).unwrap() as u8)
-        .collect();
-      let image = Image::new(WIDTH, HEIGHT, pixels);
+    let pixels: Vec<u8> = input
+      .chars()
+      .map(|c| c.to_digit(10).unwrap() as u8)
+      .collect();
+    let image = Image::new(WIDTH, HEIGHT, pixels);
 
-      for y in 0..HEIGHT {
-        for x in 0..WIDTH {
-          let out = match image.get_pixel(x, y) {
-            0 => ' ',
-            1 => '*',
-            _ => '?',
-          };
+    for y in 0..HEIGHT {
+      for x in 0..WIDTH {
+        let out = match image.get_pixel(x, y) {
+          0 => ' ',
+          1 => '*',
+          _ => '?',
+        };
+        if self.debug {
           print!("{}", out);
         }
+      }
+      if self.debug {
         println!();
       }
     }
+
     Some("Done".to_string())
   }
 }

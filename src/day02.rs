@@ -4,13 +4,13 @@ use crate::problem::Problem;
 #[derive(Default)]
 pub struct DayTwo {}
 
-impl DayTwo {
-  pub fn new() -> Self {
-    Self {}
-  }
-}
+impl DayTwo {}
 
 impl Problem for DayTwo {
+  fn new() -> Self {
+    Self {}
+  }
+
   fn soln_one(&self) -> Option<String> {
     Some("2692315".to_string())
   }

@@ -20,11 +20,11 @@ fn main() -> Result<(), String> {
 
   match args.get(1) {
     Some(day) => {
-      print_problem(day.parse::<usize>().expect("Invalid day input!"))?;
+      print_problem(day.parse::<usize>().expect("Invalid day input!"), true)?;
     }
     None => {
       for day in 1..25 {
-        if print_problem(day).is_err() {
+        if print_problem(day, false).is_err() {
           break;
         }
         println!();
@@ -35,10 +35,11 @@ fn main() -> Result<(), String> {
   Ok(())
 }
 
-fn print_problem(day: usize) -> Result<(), String> {
+fn print_problem(day: usize, debug: bool) -> Result<(), String> {
   let day_str = format!("{:02}", day);
 
-  let problem = get_problem(day).ok_or_else(|| format!("Day {} not implemented!", day_str))?;
+  let problem =
+    get_problem(day, debug).ok_or_else(|| format!("Day {} not implemented!", day_str))?;
   let input = fs::read_to_string(format!("inputs/day{}.txt", day_str)).unwrap();
 
   println!("{}", format!("DAY {}", day_str).blue().bold());
@@ -74,7 +75,22 @@ fn result(expected: &Option<String>, actual: &Option<String>) -> String {
   }
 }
 
-fn get_problem(day: usize) -> Option<Box<dyn Problem>> {
+fn get_problem(day: usize, debug: bool) -> Option<Box<dyn Problem>> {
+  if debug {
+    match day {
+      1 => Some(Box::new(DayOne::debug())),
+      2 => Some(Box::new(DayTwo::debug())),
+      3 => Some(Box::new(DayThree::debug())),
+      4 => Some(Box::new(DayFour::debug())),
+      5 => Some(Box::new(DayFive::debug())),
+      6 => Some(Box::new(DaySix::debug())),
+      7 => Some(Box::new(DaySeven::debug())),
+      8 => Some(Box::new(DayEight::debug())),
+      9 => Some(Box::new(DayNine::debug())),
+      10 => Some(Box::new(DayTen::debug())),
+      _ => None,
+    }
+  } else {
   match day {
     1 => Some(Box::new(DayOne::new())),
     2 => Some(Box::new(DayTwo::new())),
@@ -88,4 +104,5 @@ fn get_problem(day: usize) -> Option<Box<dyn Problem>> {
     10 => Some(Box::new(DayTen::new())),
     _ => None,
   }
+}
 }

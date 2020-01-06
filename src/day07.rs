@@ -9,10 +9,6 @@ use crate::problem::Problem;
 pub struct DaySeven {}
 
 impl DaySeven {
-  pub fn new() -> Self {
-    Self {}
-  }
-
   fn get_output_part_one(phase_settings: &[u8], amp_program: &[i64]) -> i64 {
     let mut signal = 0;
     for &phase in phase_settings.iter() {
@@ -72,6 +68,10 @@ const SERIES_PHASES: Range<u8> = (0..5);
 const LOOP_PHASES: Range<u8> = (5..10);
 
 impl Problem for DaySeven {
+  fn new() -> Self {
+    Self {}
+  }
+
   fn soln_one(&self) -> Option<String> {
     Some("22012".to_string())
   }
