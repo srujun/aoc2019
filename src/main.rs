@@ -12,6 +12,7 @@ use aoc2019::day06::DaySix;
 use aoc2019::day07::DaySeven;
 use aoc2019::day08::DayEight;
 use aoc2019::day09::DayNine;
+use aoc2019::day10::DayTen;
 use aoc2019::problem::Problem;
 
 fn main() -> Result<(), String> {
@@ -84,6 +85,7 @@ fn get_problem(day: usize) -> Option<Box<dyn Problem>> {
     7 => Some(Box::new(DaySeven::new())),
     8 => Some(Box::new(DayEight::new())),
     9 => Some(Box::new(DayNine::new())),
+    10 => Some(Box::new(DayTen::new())),
     _ => None,
   }
 }
