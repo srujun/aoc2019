@@ -29,9 +29,9 @@ impl Parameter {
 
   fn get_value(&self, memory: &Memory) -> i64 {
     match self {
-      Parameter::Position(p) => *memory.get_panic(*p as usize),
+      Parameter::Position(p) => *memory.get(*p as usize),
       Parameter::Immediate(v) => *v,
-      Parameter::Relative(o) => *memory.get_panic((memory.relative_base + *o) as usize),
+      Parameter::Relative(o) => *memory.get((memory.relative_base + *o) as usize),
     }
   }
 }
@@ -95,27 +95,20 @@ impl Memory {
     address < self.program.len() || self.additional.contains_key(&address)
   }
 
-  fn get(&self, address: usize) -> Option<&i64> {
+  /// Gets the value at the specified `address`.
+  /// Since Intcode is ok with non-existent addresses, it returns 0 in such cases.
+  pub fn get(&self, address: usize) -> &i64 {
     self
       .program
       .get(address)
       .or_else(|| self.additional.get(&address))
+      .unwrap_or(&0)
   }
 
-  fn get_rel(&self, offset: i64) -> Option<&i64> {
+  /// Gets the value at the address `relative_base + offset`.
+  /// Since Intcode is ok with non-existent addresses, it returns 0 in such cases.
+  pub fn get_rel(&self, offset: i64) -> &i64 {
     self.get((self.relative_base + offset) as usize)
-  }
-
-  pub fn get_panic(&self, address: usize) -> &i64 {
-    self
-      .get(address)
-      .unwrap_or_else(|| panic!("Address {} out of bounds!", address))
-  }
-
-  pub fn get_rel_panic(&self, offset: i64) -> &i64 {
-    self
-      .get_rel(offset)
-      .unwrap_or_else(|| panic!("Offset {} goes out of bounds!", offset))
   }
 
   fn set(&mut self, address: usize, value: i64) {
@@ -159,12 +152,12 @@ impl Intcode {
   }
 
   fn get_param(&self, opcode: u64, number: usize) -> Parameter {
-    let value = *self.memory.get_panic(self.ipr + number);
+    let value = *self.memory.get(self.ipr + number);
     Parameter::create(get_mode(opcode, number), value)
   }
 
   fn get_instruction(&self) -> Instruction {
-    let opcode = *self.memory.get_panic(self.ipr) as u64;
+    let opcode = *self.memory.get(self.ipr) as u64;
     match opcode % 100 {
       1 => {
         let param_1 = self.get_param(opcode, 1);
@@ -348,9 +341,9 @@ impl Intcode {
         }
         Instruction::RelativeBaseOffset(p) => {
           let change: i64 = match p {
-            Parameter::Position(pos) => *self.memory.get_panic(pos as usize),
+            Parameter::Position(pos) => *self.memory.get(pos as usize),
             Parameter::Immediate(val) => val,
-            Parameter::Relative(off) => *self.memory.get_rel_panic(off),
+            Parameter::Relative(off) => *self.memory.get_rel(off),
           };
           self.memory.relative_base += change;
 

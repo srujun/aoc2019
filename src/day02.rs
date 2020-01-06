@@ -27,7 +27,7 @@ impl Problem for DayTwo {
     let mut intcode = Intcode::new(program);
     intcode.run();
 
-    Some(intcode.memory.get_panic(0).to_string())
+    Some(intcode.memory.get(0).to_string())
   }
 
   fn soln_two(&self) -> Option<String> {
@@ -45,7 +45,7 @@ impl Problem for DayTwo {
         program[2] = verb;
         let mut intcode = Intcode::new(program);
         intcode.run();
-        if TARGET == *intcode.memory.get_panic(0) {
+        if TARGET == *intcode.memory.get(0) {
           return Some((noun * 100 + verb).to_string());
         }
       }

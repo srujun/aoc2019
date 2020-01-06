@@ -41,18 +41,24 @@ impl Problem for DayNine {
 #[cfg(test)]
 mod tests {
   use super::DayNine;
+  use crate::intcode::{self, Intcode};
   use crate::problem::Problem;
 
   #[test]
-  #[ignore] // get for null address
   fn part_one_case1() {
-    let problem = DayNine::new();
-    assert_eq!(
-      problem
-        .part_one("109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99")
-        .unwrap(),
-      ""
+    let input: Vec<i64> = vec![
+      109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99,
+    ];
+    let program = intcode::parse_program(
+      &input
+        .iter()
+        .map(|x| x.to_string())
+        .collect::<Vec<String>>()
+        .join(","),
     );
+    let mut intcode = Intcode::new(program);
+    intcode.run();
+    assert_eq!(intcode.outputs, input);
   }
 
   #[test]
